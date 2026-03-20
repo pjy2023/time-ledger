@@ -754,7 +754,8 @@ async function loadData(){
   if(url){
     setSyncStatus('Sheets에서 불러오는 중...','');
     try{
-      await loadCatsFromSheets();renderCatEditor();
+      const catsLoaded=await loadCatsFromSheets();
+      if(catsLoaded) renderCatEditor();
       const wk=weekKey();
       const lr=await fetch(`${url}?type=logs&week=${encodeURIComponent(wk)}`);
       const ld=await lr.json();
@@ -771,6 +772,7 @@ async function loadData(){
         renderTimeline();updateStats();return;
       }
       setSyncStatus('이번 주 기록 없음 — 새로 입력해 주세요','');
+      renderTimeline();updateStats();return;
     }catch(e){setSyncStatus('Sheets 연결 실패 — 로컬 데이터 사용 중','err');}
   }
   try{const d=JSON.parse(localStorage.getItem(logKey())||'{}');logs=d.logs||[];rid=d.rid||0;}catch(e){logs=[];rid=0;}
@@ -800,7 +802,11 @@ function switchTab(t){
   ['log','summary','reflect','settings'].forEach(n=>{document.getElementById('tab-'+n).style.display=n===t?'block':'none';});
   document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',['log','summary','reflect','settings'][i]===t));
   if(t==='summary')renderSummary();
-  if(t==='settings')renderCatEditor();
+  if(t==='settings'){
+    loadCatsFromSheets().then(loaded=>{
+      renderCatEditor();
+    });
+  }
   if(t==='log')renderTimeline();
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
