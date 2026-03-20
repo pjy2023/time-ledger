@@ -805,6 +805,7 @@ function switchTab(t){
   if(t==='settings'){
     loadCatsFromSheets().then(loaded=>{
       renderCatEditor();
+      showToast(loaded?'카테고리 불러왔어요 ✓':'로컬 카테고리 사용 중');
     });
   }
   if(t==='log')renderTimeline();
