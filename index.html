@@ -139,7 +139,9 @@ code{font-size:11px;background:var(--surface2);padding:2px 5px;border-radius:3px
 
   <div class="week-bar">
     <label>기록 주차</label>
-    <input type="week" id="week-input"/>
+    <button onclick="changeWeek(-1)" style="background:none;border:0.5px solid var(--border2);border-radius:var(--rs);padding:4px 10px;cursor:pointer;font-size:14px;color:var(--text2);">◀</button>
+    <input type="week" id="week-input" style="flex:1;"/>
+    <button onclick="changeWeek(1)" style="background:none;border:0.5px solid var(--border2);border-radius:var(--rs);padding:4px 10px;cursor:pointer;font-size:14px;color:var(--text2);">▶</button>
     <span id="week-range"></span>
   </div>
   <div class="stats">
@@ -348,15 +350,32 @@ function updateStats(){
 }
 
 // ── 주차 ──
-function initWeek(){
-  const now=new Date(),y=now.getFullYear();
+function getKoreanWeekValue(date){
+  // 한국 기준: 월요일 시작, 일요일 끝
+  // 일요일이면 전날(토요일)의 주차로 처리
+  const d=new Date(date);
+  if(d.getDay()===0) d.setDate(d.getDate()-1); // 일요일 → 토요일로
+  const y=d.getFullYear();
   const jan4=new Date(y,0,4),dow=jan4.getDay()||7;
   const mon=new Date(jan4);mon.setDate(jan4.getDate()-dow+1);
-  const wk=Math.ceil(((now-mon)/86400000+1)/7);
+  const wk=Math.ceil(((d-mon)/86400000+1)/7);
+  return`${y}-W${String(wk).padStart(2,'0')}`;
+}
+function initWeek(){
   const wi=document.getElementById('week-input');
-  wi.value=`${y}-W${String(wk).padStart(2,'0')}`;
+  wi.value=getKoreanWeekValue(new Date());
   setWeekRange(wi.value);
   wi.addEventListener('change',function(){setWeekRange(this.value);loadData();});
+}
+function changeWeek(dir){
+  const wi=document.getElementById('week-input');
+  const[yr,wn]=wi.value.split('-W').map(Number);
+  const jan4=new Date(yr,0,4),dow=jan4.getDay()||7;
+  const mon=new Date(jan4);mon.setDate(jan4.getDate()-dow+1+(wn-1)*7);
+  mon.setDate(mon.getDate()+dir*7);
+  wi.value=getKoreanWeekValue(mon);
+  setWeekRange(wi.value);
+  loadData();
 }
 function setWeekRange(val){
   if(!val)return;
